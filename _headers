@@ -1,0 +1,14 @@
+/*
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Content-Type-Options: nosniff
+  Cache-Control: public, max-age=1800, stale-while-revalidate=300
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/cinematic-defender-hero.png
+  Cache-Control: public, max-age=86400
+
+https://cdn.jsdelivr.net/*
+  Access-Control-Allow-Origin: *
