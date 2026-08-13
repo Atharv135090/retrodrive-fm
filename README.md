@@ -5,11 +5,11 @@ A premium cinematic single-page website that recreates a late-night drive throug
 ## Features
 
 - **Cinematic Dashboard UI** — Luxury automotive aesthetic with glassmorphism panels, OLED dark theme, and subtle neon green accents
-- **Dynamic Playlist** — Streams 331 retro Hindi songs from Supabase Storage (no local files)
-- **START ENGINE Intro** — Cinematic ignition screen with rotating rings, dashboard glow, Defender silhouette, and engine rumble effect
+- **Dynamic Playlist** — Streams retro Hindi songs from `songs.csv` via direct Supabase public URLs (no local audio files)
+- **START ENGINE Intro** — Cinematic ignition screen with rotating rings, dashboard glow, and Defender silhouette
 - **Rich Animations** — Rotating vinyl, cassette wheel, moving road, drifting fog, animated rain, film grain, twinkling stars, headlight beam glow, suspension bounce, reflection shimmer, parallax camera movement
 - **Full Player Controls** — Play/Pause, Next/Previous, Shuffle, Repeat, Seek bar, Volume slider
-- **Playlist Search** — Filter songs in real-time
+- **Clean Display Titles** — Storage filenames are auto-cleaned in-app (numbering, movie prefixes, `DownloadMing` / `Raag.Me` / `MyMp3Song` / `Mr-Jatt` tags, extensions and underscores are removed, then title-cased)
 - **Atmosphere Modes** — Night, Rain, Highway, Golden Hour
 - **Keyboard Shortcuts** — Space, Arrow keys, S, R, N, H, M
 - **Capture Moment** — Screenshot generator with song info overlay
@@ -18,9 +18,8 @@ A premium cinematic single-page website that recreates a late-night drive throug
 ## Tech Stack
 
 - HTML5 / CSS3 / Vanilla JavaScript
-- Web Audio API (visualizer + engine rumble)
+- Web Audio API (visualizer)
 - Canvas API (stars, dust, rain, grain, visualizer)
-- Supabase JS Client v2 (CDN)
 - Google Fonts (Cormorant Garamond, Playfair Display, Inter, Poppins)
 
 No build tools. No frameworks. Open `index.html` and go.
@@ -31,19 +30,25 @@ No build tools. No frameworks. Open `index.html` and go.
 2. Enable GitHub Pages (Settings → Pages → Source: main branch)
 3. Access via `https://<username>.github.io/<repo>/`
 
+## Music Library (`songs.csv`)
+
+`songs.csv` is the only source of truth for the playlist. It ships with the project and is loaded on page load.
+
+| Column      | Type | Description                            |
+|-------------|------|----------------------------------------|
+| name        | text | Original filename in Supabase Storage  |
+| public_url  | text | Direct public URL to the audio file    |
+
+- Files in Supabase Storage are never renamed; `public_url` is used as-is.
+- Display titles are generated in the app from `name` (see Features).
+- Invalid, empty, or non-audio rows are skipped automatically.
+
 ## Supabase Setup
 
-The app connects to Supabase to fetch the song catalog from the `songs` table and streams audio via `file_url`.
-
-| Column     | Type      | Description               |
-|------------|-----------|---------------------------|
-| id         | int       | Primary key               |
-| title      | text      | Song title                |
-| artist     | text      | Artist name               |
-| album      | text      | Album name                |
-| duration   | float     | Duration in seconds       |
-| file_url   | text      | Direct URL to audio file  |
-| created_at | timestamp | Auto-generated timestamp  |
+1. Create a public storage bucket (e.g. `music`) in Supabase.
+2. Upload the `.mp3` files.
+3. Copy the public URL of each file into `songs.csv` next to the original filename.
+4. Regenerate `public_url` values whenever files are re-uploaded.
 
 ## License
 

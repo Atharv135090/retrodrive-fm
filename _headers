@@ -9,6 +9,3 @@
 
 /assets/cinematic-defender-hero.png
   Cache-Control: public, max-age=86400
-
-https://cdn.jsdelivr.net/*
-  Access-Control-Allow-Origin: *
