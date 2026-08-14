@@ -290,6 +290,7 @@
           state.textContent = on ? 'On' : 'Off';
           state.classList.toggle('on', on);
         }
+        closePlayerMenu();
       }
 
       function toggleRep() {
@@ -623,6 +624,7 @@
         sleepTimer.fadeStartVol = null;
         renderSleepBadge();
         updatePlayerMenuStates();
+        closePlayerMenu();
       }
 
       // â”€â”€ CUSTOM TIMER MODAL â”€â”€
@@ -647,6 +649,7 @@
       async function downloadSong() {
         const t = playlist[currentTrackIndex];
         if (!t || !t.src) return;
+        closePlayerMenu();
         const extMatch = /\.([a-z0-9]{2,5})(?:$|[?#])/i.exec(t.src);
         const ext = extMatch ? '.' + extMatch[1] : '.mp3';
         const name = sanitizeFilename(t.title) + ext;

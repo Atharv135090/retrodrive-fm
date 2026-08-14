@@ -6,6 +6,7 @@
           document.mozFullScreenElement ||
           document.msFullscreenElement
         );
+        if (typeof closePlayerMenu === 'function') closePlayerMenu();
         window.RDTrack('fullscreen_used', { action: isFS ? 'exit' : 'enter' });
 
         if (!isFS) {
