@@ -1,0 +1,32 @@
+    :root {
+      --accent: #10b981;
+      --accent-dim: rgba(16, 185, 129, 0.15);
+      --accent-glow: rgba(16, 185, 129, 0.5);
+      --glass: rgba(10, 16, 28, 0.75);
+      --glass-b: rgba(255, 255, 255, 0.08);
+      --txt: #f3f4f6;
+      --txt2: #8aa0b6;
+      --heading: 'Playfair Display', 'Cormorant Garamond', serif;
+      --heading-script: 'Cormorant Garamond', serif;
+      --ui: 'Inter', sans-serif;
+      --ui-alt: 'Poppins', sans-serif;
+      --mono: 'Inter', monospace;
+      --hero-img: url("../assets/cinematic-defender-hero.png");
+      --car-img: none;
+    }
+
+    body.theme-night {
+      --accent: #34d399;
+      --accent-dim: rgba(52, 211, 153, 0.16);
+      --accent-glow: rgba(52, 211, 153, 0.56);
+      --glass: rgba(6, 12, 22, 0.82);
+      --txt2: #97adc0;
+    }
+
+    body.theme-day {
+      --accent: #4fd1c5;
+      --accent-dim: rgba(79, 209, 197, 0.14);
+      --accent-glow: rgba(79, 209, 197, 0.44);
+      --glass: rgba(10, 16, 28, 0.72);
+      --txt2: #93a8bc;
+    }

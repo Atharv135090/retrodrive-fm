@@ -1,0 +1,1544 @@
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--ui);
+      background: #030810;
+      color: var(--txt);
+    }
+
+    body.theme-night #scene {
+      background: linear-gradient(to bottom, #030712 0%, #08111f 50%, #12213a 100%);
+    }
+
+    body.theme-day #scene {
+      background: linear-gradient(to bottom, #41597a 0%, #587291 40%, #48634e 70%, #263128 100%);
+    }
+
+    #scene {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      isolation: isolate;
+      background: linear-gradient(to bottom, #030712 0%, #0b1528 50%, #172540 100%);
+      transition: background 1.5s ease;
+    }
+
+    /* Twinkling Stars Background */
+    .stars-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .stars-bg canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Photorealistic hero keeps the mountain road and olive Defender visible
+     behind the interface, independent of WebGL/device performance. */
+    #hero-backdrop {
+      position: absolute;
+      width: 100%;
+      height: 46vh;
+      bottom: 140px;
+      left: 0;
+      right: 0;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        linear-gradient(to bottom, rgba(2, 6, 10, .06) 0%, rgba(2, 6, 10, .24) 48%, rgba(2, 6, 10, .58) 100%),
+        var(--hero-img, url("../assets/cinematic-defender-hero.png")) center bottom / cover no-repeat;
+      opacity: 1;
+      transition: opacity 180ms ease, filter .45s ease;
+    }
+
+    body.theme-day #hero-backdrop {
+      background:
+        linear-gradient(to bottom, rgba(140, 180, 215, .16) 0%, rgba(96, 138, 175, .14) 30%, rgba(30, 44, 60, .12) 62%, rgba(6, 9, 14, .26) 100%),
+        var(--day-bg, var(--hero-img, url("../assets/cinematic-defender-hero.png"))) center center / cover no-repeat;
+      filter: brightness(1.1) saturate(1.12) contrast(1.04);
+    }
+
+    body.theme-night #hero-backdrop {
+      background:
+        linear-gradient(to bottom, rgba(3, 8, 15, .08) 0%, rgba(3, 8, 15, .32) 42%, rgba(3, 8, 15, .72) 100%),
+        var(--hero-img, url("../assets/cinematic-defender-hero.png")) center center / cover no-repeat;
+      filter: brightness(.98) saturate(1.05) contrast(1.04);
+    }
+
+    /* Parallax Mountains */
+    #mtn-layer {
+      position: absolute;
+      bottom: 24%;
+      width: 200%;
+      height: 48vh;
+      background: url("../assets/mountains.png") repeat-x bottom center / auto 100%;
+      z-index: 1;
+      opacity: .58;
+      pointer-events: none;
+      animation: mtnDrift 85s linear infinite;
+    }
+
+    #webgl-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 4;
+      pointer-events: none;
+      opacity: 1;
+    }
+
+    /* These canvases must remain decorative layers. Without absolute positioning they
+     enter normal document flow and can hide the HUD at some viewport sizes. */
+    #dust-canvas,
+    #grain-canvas,
+    .fog-layer,
+    .vignette {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    #dust-canvas {
+      z-index: 6;
+      opacity: .38;
+    }
+
+    #grain-canvas {
+      z-index: 28;
+      opacity: .1;
+      mix-blend-mode: soft-light;
+    }
+
+    .fog-layer {
+      z-index: 3;
+      background: linear-gradient(to top, rgba(3, 7, 12, .72) 0%, transparent 44%);
+    }
+
+    .vignette {
+      z-index: 29;
+      box-shadow: inset 0 0 130px rgba(0, 0, 0, .72);
+    }
+
+    /* Rain droplets */
+    #rain-canvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 30;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+
+    /* Glass Panels */
+    .panel {
+      background: var(--glass);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-b);
+      border-radius: 18px;
+      box-shadow: 0 16px 42px rgba(0, 0, 0, 0.65);
+      z-index: 40;
+      position: absolute;
+      transition: opacity 0.55s ease, transform 0.55s ease, visibility 0.55s ease, box-shadow 0.35s ease;
+    }
+
+    /* Top HUD */
+    #top-hud {
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 36px;
+      border-radius: 0 0 26px 26px;
+      border-top: 0;
+    }
+
+    .top-left-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-title {
+      font-family: var(--heading);
+      font-weight: 700;
+      font-size: 1.55rem;
+      color: #fff;
+      letter-spacing: 0;
+    }
+
+    .logo-title span {
+      color: var(--accent);
+    }
+
+    .logo-sub {
+      font-family: var(--ui);
+      font-size: 0.62rem;
+      color: var(--accent);
+      letter-spacing: 2.5px;
+      font-weight: 600;
+      margin-top: 1px;
+      text-transform: uppercase;
+    }
+
+    .top-nav {
+      display: flex;
+      align-items: center;
+      gap: clamp(18px, 3vw, 56px);
+      margin-left: clamp(20px, 4vw, 72px);
+    }
+
+    .top-nav-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      height: 52px;
+      padding: 0 22px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #eef7ff;
+      font-family: var(--ui);
+      font-size: .86rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .top-nav-btn svg {
+      width: 19px;
+      height: 19px;
+    }
+
+    .top-nav-btn.active-nav {
+      color: #fff;
+      background: rgba(14, 180, 177, .16);
+      border-color: rgba(28, 245, 226, .22);
+      box-shadow: inset 0 0 22px rgba(16, 185, 180, .1), 0 0 28px rgba(16, 185, 180, .18);
+    }
+
+    .top-nav-btn.active-nav::after {
+      content: "";
+      position: absolute;
+      bottom: 16px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 13px 0 rgba(79, 209, 197, .88), 0 0 16px var(--accent-glow);
+    }
+
+    .weather-widget {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      padding-left: 14px;
+    }
+
+    .weather-temp {
+      font-family: var(--mono);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .weather-desc {
+      font-size: 0.62rem;
+      color: var(--txt2);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-family: var(--ui);
+    }
+
+    .ctr-tel {
+      text-align: center;
+    }
+
+    .tel-title {
+      font-family: var(--heading-script);
+      font-style: italic;
+      font-size: 2.5rem;
+      color: #fbf5e6;
+      text-shadow: 0 0 14px rgba(251, 245, 230, 0.25), 0 2px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1;
+      margin-bottom: 2px;
+      font-weight: 400;
+    }
+
+    .tel-sub {
+      font-family: var(--ui);
+      font-size: 0.6rem;
+      color: var(--txt2);
+      letter-spacing: 3.5px;
+      font-weight: 500;
+    }
+
+    .top-right-telemetry {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .clock-box {
+      text-align: right;
+    }
+
+    .clock-time {
+      font-family: var(--mono);
+      font-size: 1.25rem;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .clock-date {
+      font-family: var(--ui);
+      font-size: 0.62rem;
+      color: var(--txt2);
+      letter-spacing: 1.5px;
+      font-weight: 500;
+    }
+
+    .location-box {
+      text-align: right;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      padding-left: 14px;
+    }
+
+    .location-title {
+      font-family: var(--ui);
+      font-size: 0.72rem;
+      letter-spacing: 1.5px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .location-title::after {
+      content: "ðŸ“";
+      font-size: 0.7rem;
+    }
+
+    .location-stat {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .battery-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+    }
+
+    .battery-icon-fill {
+      width: 22px;
+      height: 12px;
+      border: 1.5px solid #fff;
+      border-radius: 2px;
+      position: relative;
+      padding: 1px;
+    }
+
+    .battery-icon-fill::after {
+      content: "";
+      position: absolute;
+      right: -3px;
+      top: 3px;
+      width: 2px;
+      height: 4px;
+      background: #fff;
+    }
+
+    .battery-level {
+      height: 100%;
+      background: var(--accent);
+      width: 78%;
+    }
+
+    .mode-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .driver-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+      animation: driverPulse 1.8s ease-in-out infinite;
+    }
+
+    #default-weather-card {
+      display: none;
+      position: absolute;
+      top: clamp(110px, 15vh, 164px);
+      left: clamp(16px, 2.4vw, 36px);
+      width: clamp(180px, 18vw, 230px);
+      min-height: 150px;
+      height: auto;
+      padding: clamp(16px, 1.5vw, 24px) clamp(18px, 2vw, 26px);
+      z-index: 41;
+    }
+
+    .default-weather-icon {
+      font-size: 3.1rem;
+      line-height: 1;
+      filter: drop-shadow(0 0 12px var(--accent-glow));
+    }
+
+    .default-weather-temp {
+      font-size: 2.45rem;
+      line-height: 1;
+      font-weight: 800;
+      font-family: var(--ui);
+    }
+
+    .default-weather-desc {
+      font-size: .95rem;
+      margin-top: 7px;
+      color: #fff;
+    }
+
+    .default-weather-city {
+      margin-top: 17px;
+      color: var(--accent);
+      font-size: .78rem;
+      font-weight: 700;
+    }
+
+    #engine-side-card {
+      display: none;
+      position: absolute;
+      right: clamp(16px, 2.4vw, 36px);
+      top: clamp(320px, 31vh, 382px);
+      width: clamp(130px, 12vw, 168px);
+      min-height: 260px;
+      height: auto;
+      padding: clamp(18px, 1.6vw, 24px) clamp(16px, 1.3vw, 18px);
+      z-index: 42;
+      text-align: center;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .engine-side-title {
+      font-size: 1rem;
+      line-height: 1.25;
+      letter-spacing: 1.4px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .engine-side-title span {
+      color: var(--accent);
+      display: block;
+    }
+
+    .engine-side-icon {
+      font-size: 2.4rem;
+      filter: drop-shadow(0 0 12px rgba(79, 209, 197, .34));
+    }
+
+    .engine-side-power {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 2px solid rgba(79, 209, 197, .75);
+      background: rgba(5, 12, 22, .72);
+      color: #fff;
+      font-size: 2.1rem;
+      cursor: pointer;
+      box-shadow: 0 0 22px rgba(79, 209, 197, .16);
+    }
+
+    .engine-side-state {
+      font-size: .86rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .engine-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 9px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(16, 185, 129, 0.32);
+      background: rgba(9, 18, 30, 0.88);
+      color: #eafbf2;
+      font-family: var(--ui);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+
+    .engine-btn:hover {
+      border-color: rgba(79, 209, 197, 0.55);
+      box-shadow: 0 0 14px rgba(79, 209, 197, 0.15);
+    }
+
+    .engine-btn .engine-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .left-section-title {
+      font-family: var(--ui);
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      color: var(--txt2);
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .heart-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--txt2);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .heart-btn:hover {
+      color: #ff4a4a;
+    }
+
+    .heart-btn {
+      display: none;
+    }
+
+    button:focus-visible,
+    [role="button"]:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    .playlist-fab:focus-visible,
+    .player-btn:focus-visible,
+    .car-selector-btn:focus-visible,
+    .engine-side-power:focus-visible,
+    .capture-btn-pill:focus-visible,
+    .mode-chip:focus-visible {
+      outline: 2px solid rgba(126, 235, 190, 0.9);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+    }
+
+    /* Bottom 3D Preview Strip */
+    #preview-strip-box {
+      position: absolute;
+      bottom: 44px;
+      left: 18px;
+      right: 18px;
+      height: 132px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 40;
+    }
+
+    .preview-section-title {
+      font-family: var(--heading);
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      color: #cfaf70;
+      font-weight: 600;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .preview-cards-row {
+      display: flex;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .preview-card {
+      flex: 1;
+      height: 102px;
+      background: var(--glass);
+      border: 1px solid var(--glass-b);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s ease;
+    }
+
+    .preview-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+    }
+
+    .preview-card.active-preview {
+      border-color: var(--accent);
+      box-shadow: 0 0 24px rgba(16, 185, 129, .3), inset 0 0 18px rgba(16, 185, 129, .08);
+    }
+
+    .preview-card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.65;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .preview-card:hover .preview-card-img {
+      opacity: 0.95;
+      transform: scale(1.04);
+    }
+
+    .preview-card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .preview-card-title {
+      font-family: var(--ui);
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .preview-card-desc {
+      font-family: var(--ui);
+      font-size: 0.55rem;
+      color: var(--txt2);
+      margin-top: 1px;
+    }
+
+    .preview-card-bg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .preview-bg-night {
+      background: linear-gradient(135deg, #060c18 0%, #0d1d35 50%, #1a2f4a 100%);
+    }
+
+    .preview-bg-highway {
+      background: linear-gradient(135deg, #050a14 0%, #0a1525 50%, #162340 100%);
+    }
+
+    .preview-bg-speed {
+      background: linear-gradient(135deg, #030810 0%, #0a1a2e 40%, #0f2545 100%);
+    }
+
+    .preview-bg-rain {
+      background: linear-gradient(135deg, #04080e 0%, #091422 50%, #0f1e30 100%);
+    }
+
+    .preview-bg-golden {
+      background: linear-gradient(135deg, #1c0600 0%, #4a1200 50%, #7a2a00 100%);
+    }
+
+    /* Footer bar */
+    #footer-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      background: rgba(4, 8, 16, 0.9);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      z-index: 42;
+    }
+
+    .shortcuts-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 0.65rem;
+      color: var(--txt2);
+      font-family: var(--ui);
+      font-weight: 500;
+    }
+
+    .shortcuts-title {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .shortcut-key-badge {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+
+    .capture-btn-pill {
+      background: transparent;
+      border: 1.5px solid var(--accent);
+      color: var(--accent);
+      font-family: var(--ui);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 4px 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .capture-btn-pill:hover {
+      background: var(--accent);
+      color: #030810;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    /* Intro overlay */
+    #intro {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, #0c1c3a 0%, #020810 100%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+      transition: opacity 1.2s ease, visibility 1.2s ease;
+    }
+
+    #intro.gone {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      display: none;
+    }
+
+    /* Intro â€” Defender silhouette */
+    .intro-defender-silhouette {
+      position: absolute;
+      bottom: 8%;
+      width: 60%;
+      max-width: 700px;
+      opacity: 0.06;
+      filter: brightness(0) invert(1);
+      pointer-events: none;
+    }
+
+    /* Intro â€” Dashboard glow */
+    .intro-dash-glow {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 30%;
+      background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(16, 185, 129, 0.08) 0%, transparent 80%);
+      pointer-events: none;
+      animation: dashGlowPulse 3s ease-in-out infinite alternate;
+    }
+
+    .intro-ring-wrap {
+      position: relative;
+      width: 148px;
+      height: 148px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    .intro-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2.5px solid var(--accent);
+      border-top-color: transparent;
+      animation: ringRotate 2.8s linear infinite;
+      pointer-events: none;
+    }
+
+    .intro-ring-outer {
+      position: absolute;
+      inset: -9px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(16, 185, 129, 0.22);
+      border-bottom-color: transparent;
+      animation: ringRotate 4.5s linear infinite reverse;
+      pointer-events: none;
+    }
+
+    .intro-ring-inner {
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      border: 1px solid rgba(16, 185, 129, 0.12);
+      border-left-color: transparent;
+      animation: ringRotate 1.8s linear infinite;
+      pointer-events: none;
+    }
+
+    .start-btn {
+      position: relative;
+      z-index: 10;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #1a2d4a, #0c1828);
+      border: 2.5px solid var(--accent);
+      color: #fff;
+      font-family: var(--ui);
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      box-shadow: 0 0 38px var(--accent-glow), inset 0 0 18px rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+    }
+
+    .start-btn:hover {
+      transform: scale(1.09);
+      box-shadow: 0 0 55px var(--accent-glow), inset 0 0 18px rgba(0, 0, 0, 0.8);
+    }
+
+    .intro-title {
+      font-family: var(--heading);
+      font-size: 1.2rem;
+      letter-spacing: 3px;
+      color: #c8ddf0;
+      z-index: 2;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .intro-sub {
+      font-family: var(--ui);
+      font-size: 0.72rem;
+      color: var(--txt2);
+      z-index: 2;
+      letter-spacing: 1px;
+      font-weight: 400;
+    }
+
+    /* Loading indicator */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 8, 16, 0.95);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+      /* Never block the UI: the overlay auto-hides after 800ms even if all
+         script fails, and it never captures clicks. */
+      pointer-events: none;
+      animation: loaderAutohide 0.8s linear forwards;
+    }
+
+    .loading-overlay.gone {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      display: none;
+    }
+
+    .loading-spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(16, 185, 129, 0.15);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: ringRotate 1s linear infinite;
+    }
+
+    .loading-text {
+      font-family: var(--ui);
+      font-size: 0.78rem;
+      color: var(--txt2);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    /* Snapshot modal */
+    #snap-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(12px);
+      z-index: 90;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    #snap-modal.on {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #snap-canvas {
+      max-width: 84vw;
+      max-height: 72vh;
+      border-radius: 12px;
+      box-shadow: 0 22px 65px rgba(0, 0, 0, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .snap-row {
+      display: flex;
+      gap: 14px;
+    }
+
+    .cap-btn {
+      background: var(--glass);
+      border: 1.5px solid var(--accent);
+      color: var(--accent);
+      font-family: var(--ui);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+    }
+
+    .cap-btn:hover {
+      background: var(--accent);
+      color: #030810;
+      box-shadow: 0 0 25px var(--accent-glow);
+    }
+
+    /* OVERHAUL STYLES */
+    #top-hud {
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(900px, 94%);
+      height: 60px;
+      border-radius: 30px;
+      padding: 0 24px;
+      background: rgba(5, 12, 20, 0.75);
+      border: 1px solid rgba(28, 245, 226, 0.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .mode-controls {
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      padding-left: 14px;
+    }
+
+    #default-weather-card {
+      display: flex;
+      flex-direction: column;
+      top: clamp(92px, 14vh, 120px);
+      left: clamp(18px, 3vw, 54px);
+      width: clamp(170px, 18vw, 228px);
+      min-height: 180px;
+      height: auto;
+      padding: clamp(18px, 1.6vw, 24px);
+      align-items: flex-start;
+      justify-content: space-between;
+      background: rgba(10, 16, 28, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .default-weather-icon {
+      font-size: 4rem;
+      margin-bottom: -15px;
+    }
+
+    .default-weather-temp {
+      font-size: 3rem;
+      margin-bottom: 5px;
+    }
+
+    .default-weather-desc {
+      font-size: 0.9rem;
+    }
+
+    .default-weather-city {
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .default-weather-city::before {
+      content: 'ðŸ“';
+      color: #ef4444;
+    }
+
+    #engine-side-card {
+      display: flex;
+      flex-direction: column;
+      top: clamp(92px, 14vh, 120px);
+      right: clamp(18px, 3vw, 54px);
+      width: clamp(140px, 14vw, 210px);
+      min-height: 180px;
+      height: auto;
+      padding: clamp(16px, 1.5vw, 24px);
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(10, 16, 28, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .engine-side-power {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: transparent;
+      color: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      box-shadow: none;
+      transition: all 0.3s ease;
+    }
+
+    .engine-side-state {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .engine-side-power.off {
+      border-color: rgba(239, 68, 68, .55);
+      box-shadow: 0 0 14px rgba(239, 68, 68, .22);
+      color: #fff;
+      animation: enginePowerPulse 1.2s ease-in-out infinite;
+    }
+
+    .engine-side-state.off {
+      color: #ef4444;
+    }
+
+    /* v5.1 single cinematic mode overrides */
+    body,
+    html {
+      background: #02070d;
+    }
+
+    body #webgl-canvas,
+    body #mtn-layer {
+      opacity: 0 !important;
+      display: none !important;
+    }
+
+    body #hero-backdrop {
+      display: block !important;
+      width: 100% !important;
+      height: 46vh !important;
+      bottom: 140px !important;
+      left: 0 !important;
+      right: 0 !important;
+      background:
+        radial-gradient(circle at 50% 28%, rgba(42, 105, 160, .22), transparent 34%),
+        linear-gradient(to bottom, rgba(2, 6, 10, .08) 0%, rgba(2, 6, 10, .12) 42%, rgba(2, 6, 10, .42) 100%),
+        var(--hero-img, url("../assets/cinematic-defender-hero.png")) center bottom / cover no-repeat !important;
+      filter: brightness(1.04) saturate(1.08) contrast(1.04) !important;
+    }
+
+    body #top-hud {
+      top: 38px !important;
+      left: 50% !important;
+      right: auto !important;
+      width: min(88vw, 1460px) !important;
+      height: 86px !important;
+      transform: translateX(-50%) !important;
+      padding: 0 34px !important;
+      border-radius: 24px !important;
+      background: rgba(5, 12, 20, .72) !important;
+      border: 1px solid rgba(255, 255, 255, .15) !important;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, .54), inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+      backdrop-filter: blur(22px) !important;
+      -webkit-backdrop-filter: blur(22px) !important;
+      display: grid !important;
+      grid-template-columns: auto minmax(210px, 1fr) auto !important;
+      align-items: center !important;
+      gap: 28px !important;
+    }
+
+    body #top-hud .weather-widget,
+    body #top-hud .location-box {
+      display: none !important;
+    }
+
+    body .top-left-logo {
+      gap: 22px !important;
+    }
+
+    body .logo-title {
+      font-size: 1.72rem !important;
+    }
+
+    body .logo-sub {
+      font-size: .68rem !important;
+      color: #4ee7e4 !important;
+      letter-spacing: 2.4px !important;
+    }
+
+    body .logo-title span {
+      color: #39dedb !important;
+    }
+
+    body .driver-dot {
+      background: #3fdce1 !important;
+      box-shadow: 0 0 16px rgba(63, 220, 225, .75) !important;
+    }
+
+    body #top-hud>.top-right-telemetry {
+      justify-self: end !important;
+      gap: 34px !important;
+    }
+
+    body .clock-time {
+      font-size: 1.68rem !important;
+      line-height: 1 !important;
+    }
+
+    body .clock-date {
+      font-size: .76rem !important;
+      letter-spacing: .8px !important;
+    }
+
+    body .battery-box {
+      font-size: .95rem !important;
+      gap: 10px !important;
+    }
+
+    body #default-weather-card {
+      display: flex !important;
+      flex-direction: column !important;
+      top: 300px !important;
+      left: 54px !important;
+      width: 250px !important;
+      height: 250px !important;
+      padding: 30px 34px !important;
+      border-radius: 24px !important;
+      background: rgba(8, 14, 22, .66) !important;
+      border: 1px solid rgba(255, 255, 255, .13) !important;
+      box-shadow: 0 22px 56px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255, 255, 255, .05) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      justify-content: space-between !important;
+    }
+
+    body .default-weather-icon {
+      font-size: 4rem !important;
+      color: #fff !important;
+    }
+
+    body .default-weather-temp {
+      font-size: 3rem !important;
+      color: #fff !important;
+    }
+
+    body .default-weather-desc {
+      font-size: 1rem !important;
+      color: #fff !important;
+    }
+
+    body .default-weather-city {
+      color: #42e2e0 !important;
+      font-size: .92rem !important;
+    }
+
+    body #engine-side-card {
+      display: flex !important;
+      top: 380px !important;
+      right: 54px !important;
+      width: 168px !important;
+      height: 286px !important;
+      border-radius: 24px !important;
+      padding: 34px 24px 24px !important;
+      background: rgba(8, 14, 22, .7) !important;
+      border: 1px solid rgba(255, 255, 255, .13) !important;
+      box-shadow: 0 22px 56px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .05) !important;
+    }
+
+    body .engine-side-title {
+      font-size: 1.18rem !important;
+      color: #fff !important;
+      letter-spacing: .6px !important;
+    }
+
+    body .engine-side-state {
+      color: rgba(255, 255, 255, .52) !important;
+      font-size: .9rem !important;
+      font-weight: 700 !important;
+    }
+
+    body .engine-side-state.off {
+      color: #ef4444 !important;
+    }
+
+    body .engine-side-power {
+      border-color: rgba(255, 255, 255, .25) !important;
+      box-shadow: none !important;
+      transform: translateY(-10px) !important;
+      color: rgba(255, 255, 255, .55) !important;
+    }
+
+    body .engine-side-power.off {
+      border-color: #ef4444 !important;
+      color: #fff !important;
+      box-shadow: 0 0 26px rgba(239, 68, 68, .28), inset 0 0 0 8px rgba(239, 68, 68, .05) !important;
+    }
+
+    body #rain-canvas {
+      opacity: .35 !important;
+    }
+
+    /* Keep the visual scene light to render: the hero image already supplies the
+   atmosphere, so the legacy canvas/WebGL layers are unnecessary work. */
+    body #stars-bg,
+    body #dust-canvas,
+    body #grain-canvas,
+    body #webgl-canvas {
+      display: none !important;
+    }
+
+    body.theme-day #hero-backdrop {
+      background: linear-gradient(to bottom, rgba(159, 203, 235, .05), rgba(3, 9, 16, .3)), var(--car-bg, var(--day-bg, var(--hero-img, url("../assets/cinematic-defender-hero.png")))) center bottom / cover no-repeat !important;
+      filter: brightness(1.12) saturate(1.1) contrast(1.03) !important;
+    }
+
+    body.theme-night #hero-backdrop {
+      background: linear-gradient(to bottom, rgba(2, 7, 14, .18), rgba(2, 7, 14, .64)), var(--car-bg, var(--hero-img, url("../assets/cinematic-defender-hero.png"))) center bottom / cover no-repeat !important;
+      filter: brightness(.76) saturate(.94) contrast(1.08) !important;
+    }
+
+    body #intro {
+      justify-content: center !important;
+    }
+
+    body #intro .intro-ring-wrap,
+    body #intro .intro-title,
+    body #intro .intro-sub {
+      transform: translateY(-12vh);
+    }
+
+    /* Reference layout polish: compact landscape dashboard and a stacked phone HUD. */
+    /* Reference layout polish: compact landscape dashboard and a stacked phone HUD. */
+    body {
+      --accent: #ff4148;
+      --accent-glow: rgba(255, 65, 72, .52);
+    }
+
+    body #top-hud {
+      width: min(92vw, 1430px) !important;
+    }
+
+    body #default-weather-card {
+      top: 300px !important;
+    }
+
+    body #engine-side-card {
+      top: 390px !important;
+    }
+
+    body .default-weather-city {
+      color: #fff !important;
+    }
+
+    /* Custom Weather styles */
+    #default-weather-card {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+    }
+
+    .weather-icon-container {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .weather-cloud-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: drop-shadow(0 0 10px var(--accent-glow));
+      transform: translateZ(0);
+    }
+
+    .weather-info {
+      margin-top: 0;
+      line-height: 1.08;
+    }
+
+    .weather-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 12px;
+      font-size: 0.68rem;
+      line-height: 1.3;
+    }
+
+    .weather-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: rgba(255, 255, 255, 0.9);
+      min-height: 18px;
+    }
+
+    .weather-meta-item.update-item {
+      color: rgba(131, 202, 255, 0.82);
+      opacity: 0.82;
+    }
+
+    .default-weather-city {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.01em;
+    }
+
+    .default-weather-city::before {
+      content: none;
+    }
+
+    .weather-meta-item.location-item {
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .weather-meta-item.location-item:active {
+      opacity: 0.6;
+    }
+
+    .pin-icon,
+    .refresh-icon {
+      width: 13px;
+      height: 13px;
+      flex-shrink: 0;
+    }
+
+    /* Engine Card Waveform */
+    #engine-side-card {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+    }
+
+    .engine-waveform {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 3px;
+      width: 100%;
+      height: 20px;
+      margin-top: 8px;
+      opacity: 0.3;
+    }
+
+    .engine-waveform.active {
+      opacity: 1;
+    }
+
+    .wave-bar {
+      width: 3px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 1px;
+      transform-origin: bottom center;
+      will-change: transform;
+    }
+
+    .engine-waveform.active .wave-bar {
+      animation: engineWaveBounce 0.6s ease-in-out infinite alternate;
+    }
+
+    .engine-waveform.active .wave-bar:nth-child(even) {
+      animation-duration: 0.4s;
+      animation-delay: 0.1s;
+    }
+
+    .engine-waveform.active .wave-bar:nth-child(3n) {
+      animation-duration: 0.7s;
+      animation-delay: 0.2s;
+    }
+
+    .engine-waveform.active .wave-bar:nth-child(4n) {
+      animation-duration: 0.5s;
+      animation-delay: 0.05s;
+    }
+
+    /* v5.4 refinement: lightweight car selector and tighter premium widgets. */
+    body #vehicle-stage {
+      position: absolute !important;
+      display: none !important;
+      left: 50% !important;
+      bottom: 116px !important;
+      width: min(780px, 54vw) !important;
+      aspect-ratio: 900 / 520 !important;
+      transform: translateX(-50%) !important;
+      z-index: 8 !important;
+      pointer-events: none !important;
+      filter: drop-shadow(0 30px 28px rgba(0, 0, 0, .56)) drop-shadow(0 0 22px rgba(255, 65, 72, .12)) !important;
+    }
+
+    body.car-selected #vehicle-stage {
+      display: none !important;
+    }
+
+    body #selected-car-img {
+      width: 100% !important;
+      height: 100% !important;
+      display: none !important;
+      object-fit: contain !important;
+      transition: opacity 150ms ease, filter .3s ease !important;
+    }
+
+    body #selected-car-img.swapping {
+      opacity: .2 !important;
+    }
+
+    body.theme-day #hero-backdrop {
+      background: linear-gradient(to bottom, rgba(255, 255, 255, .04), rgba(3, 9, 16, .22)), var(--car-bg, var(--day-bg, var(--hero-img, url("../assets/cinematic-defender-hero.png")))) center center / cover no-repeat !important;
+      filter: brightness(1.08) saturate(1.08) contrast(1.04) !important;
+    }
+
+    body.theme-night #hero-backdrop {
+      background: linear-gradient(to bottom, rgba(2, 7, 14, .1), rgba(2, 7, 14, .46)), var(--car-bg, var(--hero-img, url("../assets/cinematic-defender-hero.png"))) center center / cover no-repeat !important;
+      filter: brightness(.9) saturate(.98) contrast(1.06) !important;
+    }
+
+    body #default-weather-card {
+      width: 208px !important;
+      height: 214px !important;
+      padding: 22px 24px !important;
+    }
+
+    body .default-weather-temp {
+      font-size: 2.55rem !important;
+    }
+
+    body .default-weather-desc {
+      font-size: .9rem !important;
+      margin-top: 4px !important;
+    }
+
+    body .default-weather-city {
+      margin-top: 14px !important;
+      font-size: .84rem !important;
+    }
+
+    body #engine-side-card {
+      justify-content: space-between !important;
+      gap: 12px !important;
+    }
+
+    #vehicle-stage,
+    #selected-car-img,
+    .intro-defender-silhouette {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+            /* Full screen backdrop overrides to display full car in view */
+    body #hero-backdrop,
+    body.theme-day #hero-backdrop,
+    body.theme-night #hero-backdrop {
+      height: 100vh !important;
+      width: 100vw !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      background-position: center 48% !important;
+      background-size: cover !important;
+    }

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="data:,">
+  <title>RetroDrive FM — Analytics</title>
+  <link rel="stylesheet" href="css/analytics.css">
+</head>
+<body>
+  <main class="page">
+    <section id="login-screen">
+      <form id="login-form" class="login-card" autocomplete="off">
+        <div class="brand-mark">R</div>
+        <h1>RetroDrive FM</h1>
+        <p class="subtitle">Analytics Dashboard &mdash; owner access only</p>
+        <input id="password" class="password-input" type="password" placeholder="Password" aria-label="Password">
+        <button id="unlock-btn" class="unlock-btn" type="submit">Unlock</button>
+        <p id="login-error" class="error" hidden>Incorrect password.</p>
+      </form>
+    </section>
+
+    <section id="dashboard" hidden>
+      <header class="dash-header">
+        <div class="dash-title">
+          <h1>RetroDrive FM</h1>
+          <p>Live &amp; historical analytics from Google Analytics 4</p>
+        </div>
+        <div class="dash-actions">
+          <span id="conn-status" class="status-chip status-off">Not connected</span>
+          <button id="ga-connect-btn" class="ga-btn" type="button" hidden>Connect Google Analytics</button>
+          <button id="refresh-btn" class="ghost-btn" type="button">Refresh</button>
+          <button id="logout-btn" class="logout-btn" type="button">Log out</button>
+        </div>
+      </header>
+
+      <nav class="filter-bar" aria-label="Time range">
+        <button type="button" class="filter-btn active" data-range="realtime">Realtime</button>
+        <button type="button" class="filter-btn" data-range="today">Today</button>
+        <button type="button" class="filter-btn" data-range="7">Last 7 Days</button>
+        <button type="button" class="filter-btn" data-range="30">Last 30 Days</button>
+        <button type="button" class="filter-btn" data-range="90">Last 90 Days</button>
+      </nav>
+
+      <div id="setup-card" class="setup-card" hidden>
+        <h2>Google Analytics not connected yet</h2>
+        <p>No analytics scripts load and no fake data is shown until real GA4 credentials are added. To connect:</p>
+        <ol>
+          <li>Create a GA4 property for the site in Google Analytics and note the numeric <strong>Property ID</strong>.</li>
+          <li>In Google Cloud Console, create an <strong>OAuth 2.0 Web Client ID</strong> (authorized origin: your site domain; authorized redirect URI: <code>https://&lt;your-site&gt;/</code>).</li>
+          <li>Enable the <strong>Google Analytics Data API</strong> for that Cloud project.</li>
+          <li>Grant the owner&rsquo;s Google account <strong>Viewer</strong> access to the GA4 property.</li>
+          <li>Paste the Property ID and Client ID into <code>js/ga-api.js</code>.</li>
+        </ol>
+      </div>
+
+      <section id="live-section" class="section hidden">
+        <div class="section-head">
+          <h2>Live</h2>
+          <span class="auto-chip">auto-refresh 30s</span>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card"><span class="kpi-label">Users Live Right Now</span><span id="live-users" class="kpi-value">—</span></div>
+          <div class="kpi-card"><span class="kpi-label">Active Users (30 min)</span><span id="live-active30" class="kpi-value">—</span></div>
+          <div class="kpi-card"><span class="kpi-label">Current Page Views</span><span id="live-pageviews" class="kpi-value">—</span></div>
+          <div class="kpi-card"><span class="kpi-label">Last Updated</span><span id="live-updated" class="kpi-value kpi-small">—</span></div>
+        </div>
+        <div class="panel-grid">
+          <section class="panel"><h2>Live Top Countries</h2><table class="stat-table"><tbody id="live-countries"></tbody></table></section>
+          <section class="panel"><h2>Live Top Devices</h2><table class="stat-table"><tbody id="live-devices"></tbody></table></section>
+        </div>
+      </section>
+
+      <section id="visitors-section" class="section hidden">
+        <div class="section-head"><h2>Visitors</h2></div>
+        <div class="kpi-grid">
+          <div class="kpi-card"><span class="kpi-label">Total Users</span><span id="v-total" class="kpi-value">—</span></div>
+          <div class="kpi-card"><span class="kpi-label">New Users</span><span id="v-new" class="kpi-value">—</span></div>
+          <div class="kpi-card"><span class="kpi-label">Returning Users</span><span id="v-returning" class="kpi-value">—</span></div>
+          <div class="kpi-card"><span class="kpi-label">Total Sessions</span><span id="v-sessions" class="kpi-value">—</span></div>
+          <div class="kpi-card"><span class="kpi-label">Engaged Sessions</span><span id="v-engaged" class="kpi-value">—</span></div>
+          <div class="kpi-card"><span class="kpi-label">Avg Session Duration</span><span id="v-duration" class="kpi-value">—</span></div>
+        </div>
+      </section>
+
+      <section id="traffic-section" class="section hidden">
+        <div class="section-head"><h2>Traffic</h2></div>
+        <div class="kpi-grid">
+          <div class="kpi-card"><span class="kpi-label">Page Views</span><span id="t-pageviews" class="kpi-value">—</span></div>
+        </div>
+        <div class="panel-grid">
+          <section class="panel"><h2>Top Pages</h2><table class="stat-table"><tbody id="t-top-pages"></tbody></table></section>
+          <section class="panel"><h2>Traffic Sources</h2><table class="stat-table"><tbody id="t-sources"></tbody></table></section>
+          <section class="panel"><h2>Campaign Sources</h2><table class="stat-table"><tbody id="t-campaigns"></tbody></table></section>
+        </div>
+      </section>
+
+      <section id="audience-section" class="section hidden">
+        <div class="section-head"><h2>Audience</h2></div>
+        <div class="panel-grid">
+          <section class="panel"><h2>Countries</h2><table class="stat-table"><tbody id="a-countries"></tbody></table></section>
+          <section class="panel"><h2>Cities</h2><table class="stat-table"><tbody id="a-cities"></tbody></table></section>
+          <section class="panel"><h2>Device Type</h2><table class="stat-table"><tbody id="a-devices"></tbody></table></section>
+          <section class="panel"><h2>Browser</h2><table class="stat-table"><tbody id="a-browsers"></tbody></table></section>
+          <section class="panel"><h2>Operating System</h2><table class="stat-table"><tbody id="a-os"></tbody></table></section>
+          <section class="panel"><h2>Screen Resolution</h2><table class="stat-table"><tbody id="a-res"></tbody></table></section>
+        </div>
+      </section>
+
+      <section id="events-section" class="section hidden">
+        <div class="section-head"><h2>RetroDrive FM Events</h2></div>
+        <div class="panel-grid">
+          <section class="panel">
+            <h2>Event Counts</h2>
+            <table class="stat-table">
+              <tbody id="e-counts">
+                <tr data-event="song_started"><td>Song Started</td><td class="num">—</td></tr>
+                <tr data-event="song_completed"><td>Song Completed</td><td class="num">—</td></tr>
+                <tr data-event="song_skipped"><td>Song Skipped</td><td class="num">—</td></tr>
+                <tr data-event="playlist_selected"><td>Playlist Selected</td><td class="num">—</td></tr>
+                <tr data-event="car_selected"><td>Car Selected</td><td class="num">—</td></tr>
+                <tr data-event="fullscreen_used"><td>Fullscreen Used</td><td class="num">—</td></tr>
+                <tr data-event="wake_lock_activated"><td>Wake Lock Activated</td><td class="num">—</td></tr>
+                <tr data-event="listening_time"><td>Listening Time</td><td class="num">—</td></tr>
+              </tbody>
+            </table>
+          </section>
+          <section class="panel"><h2>Most Played Songs</h2><table class="stat-table"><tbody id="e-most-songs"></tbody></table></section>
+          <section class="panel"><h2>Most Selected Cars</h2><table class="stat-table"><tbody id="e-most-cars"></tbody></table></section>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="js/analytics-auth.js"></script>
+  <script src="js/ga-api.js"></script>
+  <script src="js/analytics-dashboard.js"></script>
+</body>
+</html>
