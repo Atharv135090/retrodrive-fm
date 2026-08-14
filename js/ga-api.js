@@ -5,8 +5,8 @@
    below; until then the dashboard shows a "not connected" state. */
 
 (() => {
-  const GA4_PROPERTY_ID = 'YOUR_GA4_PROPERTY_ID';
-  const OAUTH_CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
+  const GA4_PROPERTY_ID = '549943186';
+  const OAUTH_CLIENT_ID = '300793606413-jcupjq6h3ek4t1pk33afcimskqerbshr.apps.googleusercontent.com';
   const API_SCOPE = 'https://www.googleapis.com/auth/analytics.readonly';
   const API_BASE = 'https://analyticsdata.googleapis.com/v1beta';
 
