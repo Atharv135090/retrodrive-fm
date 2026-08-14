@@ -1,3 +1,25 @@
+      // Preloads every car artwork into an in-memory Image cache at
+      // startup so the displayed car swaps instantly on selection (the
+      // browser cache and this map both hold the assets from the first
+      // page load, eliminating the delayed appearance).
+      const carPreloadCache = new Map();
+
+      function preloadCarAssets() {
+        CAR_OPTIONS.forEach(car => {
+          const urls = new Set([car.src, car.scene800, car.scene1200, car.scene1920, car.portrait].filter(Boolean));
+          urls.forEach(u => {
+            if (!carPreloadCache.has(u)) {
+              const img = new Image();
+              img.decoding = 'async';
+              img.src = u;
+              carPreloadCache.set(u, img);
+            }
+          });
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', preloadCarAssets);
+
       function setCarImageSrc(img, car, swapping) {
         if (!img || !car) return;
         if (swapping) img.classList.add('swapping');
@@ -6,11 +28,16 @@
           img.srcset = `${car.scene800} 800w, ${car.scene1200} 1200w, ${car.scene1920} 1920w`;
           img.sizes = '100vw';
         }
-        img.src = isMobileView()
+        const src = isMobileView()
           ? car.scene800 || car.scene1920 || car.src
           : car.scene1920 || car.src;
-        img.onload = finish;
-        window.setTimeout(finish, 300);
+        img.src = src;
+        if (carPreloadCache.has(src)) {
+          finish();
+        } else {
+          img.onload = finish;
+          window.setTimeout(finish, 300);
+        }
       }
 
       function getSelectedCar() {

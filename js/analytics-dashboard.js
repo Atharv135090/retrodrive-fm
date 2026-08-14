@@ -55,9 +55,12 @@
       return;
     }
     const list = limit ? rows.slice(0, limit) : rows;
+    const max = Math.max(1, ...list.map(r => Number(r[valueKey]) || 0));
     tbody.innerHTML = list.map(r => {
       const label = r[labelKey] && String(r[labelKey]).length ? String(r[labelKey]) : '(not set)';
-      return '<tr><td class="dim">' + escapeHtml(label) + '</td><td class="num">' + fmt(r[valueKey]) + '</td></tr>';
+      const v = Number(r[valueKey]) || 0;
+      const bar = '<i class="tbar" style="width:' + Math.max(4, Math.round((v / max) * 100)) + '%"></i>';
+      return '<tr><td class="dim">' + bar + escapeHtml(label) + '</td><td class="num">' + fmt(v) + '</td></tr>';
     }).join('');
   }
 
@@ -84,13 +87,13 @@
     try {
       const [liveUsers, totals, pageViews, countries, devices] = await Promise.allSettled([
         GaApi.realtimeReport(['activeUsers'], []),
-        GaApi.realtimeReport(['totalUsers'], []),
+        GaApi.realtimeReport(['activeUsers'], []),
         GaApi.realtimeReport(['eventCount'], [], { filter: { filter: { fieldName: 'eventName', stringFilter: { matchType: 'EXACT', value: 'page_view' } } } }),
         GaApi.realtimeReport(['activeUsers'], ['country'], { limit: 5 }),
         GaApi.realtimeReport(['activeUsers'], ['deviceCategory'], { limit: 5 })
       ]);
       if (liveUsers.status === 'fulfilled') $('live-users').textContent = fmtNum(liveUsers.value[0] ? liveUsers.value[0].activeUsers : 0);
-      if (totals.status === 'fulfilled') $('live-active30').textContent = fmtNum(totals.value[0] ? totals.value[0].totalUsers : 0);
+      if (totals.status === 'fulfilled') $('live-active30').textContent = fmtNum(totals.value[0] ? totals.value[0].activeUsers : 0);
       if (pageViews.status === 'fulfilled') $('live-pageviews').textContent = fmtNum(pageViews.value[0] ? pageViews.value[0].eventCount : 0);
       if (countries.status === 'fulfilled') fillTable($('live-countries'), countries.value, 'country', 'activeUsers', fmtNum);
       if (devices.status === 'fulfilled') fillTable($('live-devices'), devices.value, 'deviceCategory', 'activeUsers', fmtNum);
@@ -111,17 +114,17 @@
     if (!GaApi.isSignedIn()) return;
     try {
       const [visitors, pageViews, topPages, sources, campaigns, countries, cities, devices, browsers, os, res, events] = await Promise.allSettled([
-        GaApi.runReport(range, ['totalUsers', 'newUsers', 'sessions', 'engagedSessions', 'averageSessionDuration'], []),
+        GaApi.runReport(range, ['activeUsers', 'newUsers', 'sessions', 'engagedSessions', 'averageSessionDuration'], []),
         GaApi.runReport(range, ['screenPageViews'], []),
         GaApi.runReport(range, ['screenPageViews'], ['pagePath'], { orderBy: 'screenPageViews', limit: 8 }),
         GaApi.runReport(range, ['sessions'], ['sessionDefaultChannelGroup'], { orderBy: 'sessions', limit: 8 }),
         GaApi.runReport(range, ['sessions'], ['sessionCampaignName'], { orderBy: 'sessions', limit: 8 }),
-        GaApi.runReport(range, ['totalUsers'], ['country'], { orderBy: 'totalUsers', limit: 8 }),
-        GaApi.runReport(range, ['totalUsers'], ['city'], { orderBy: 'totalUsers', limit: 8 }),
-        GaApi.runReport(range, ['totalUsers'], ['deviceCategory'], { orderBy: 'totalUsers', limit: 8 }),
-        GaApi.runReport(range, ['totalUsers'], ['browser'], { orderBy: 'totalUsers', limit: 8 }),
-        GaApi.runReport(range, ['totalUsers'], ['operatingSystem'], { orderBy: 'totalUsers', limit: 8 }),
-        GaApi.runReport(range, ['totalUsers'], ['screenResolution'], { orderBy: 'totalUsers', limit: 8 }),
+        GaApi.runReport(range, ['activeUsers'], ['country'], { orderBy: 'activeUsers', limit: 8 }),
+        GaApi.runReport(range, ['activeUsers'], ['city'], { orderBy: 'activeUsers', limit: 8 }),
+        GaApi.runReport(range, ['activeUsers'], ['deviceCategory'], { orderBy: 'activeUsers', limit: 8 }),
+        GaApi.runReport(range, ['activeUsers'], ['browser'], { orderBy: 'activeUsers', limit: 8 }),
+        GaApi.runReport(range, ['activeUsers'], ['operatingSystem'], { orderBy: 'activeUsers', limit: 8 }),
+        GaApi.runReport(range, ['activeUsers'], ['screenResolution'], { orderBy: 'activeUsers', limit: 8 }),
         GaApi.runReport(range, ['eventCount'], ['eventName'], {
           orderBy: 'eventCount', limit: 12,
           filter: { filter: { fieldName: 'eventName', inListFilter: { values: ['song_started', 'song_completed', 'song_skipped', 'playlist_selected', 'car_selected', 'fullscreen_used', 'wake_lock_activated', 'listening_time'] } } }
@@ -133,9 +136,9 @@
       const rows = results.map(r => r.value);
 
       const v = rows[0][0] || {};
-      $('v-total').textContent = fmtNum(v.totalUsers);
+      $('v-total').textContent = fmtNum(v.activeUsers);
       $('v-new').textContent = fmtNum(v.newUsers);
-      $('v-returning').textContent = fmtNum(Math.max(0, (v.totalUsers || 0) - (v.newUsers || 0)));
+      $('v-returning').textContent = fmtNum(Math.max(0, (v.activeUsers || 0) - (v.newUsers || 0)));
       $('v-sessions').textContent = fmtNum(v.sessions);
       $('v-engaged').textContent = fmtNum(v.engagedSessions);
       $('v-duration').textContent = fmtDur(v.averageSessionDuration);
@@ -144,12 +147,12 @@
       fillTable($('t-top-pages'), rows[2], 'pagePath', 'screenPageViews', fmtNum);
       fillTable($('t-sources'), rows[3], 'sessionDefaultChannelGroup', 'sessions', fmtNum);
       fillTable($('t-campaigns'), rows[4], 'sessionCampaignName', 'sessions', fmtNum);
-      fillTable($('a-countries'), rows[5], 'country', 'totalUsers', fmtNum);
-      fillTable($('a-cities'), rows[6], 'city', 'totalUsers', fmtNum);
-      fillTable($('a-devices'), rows[7], 'deviceCategory', 'totalUsers', fmtNum);
-      fillTable($('a-browsers'), rows[8], 'browser', 'totalUsers', fmtNum);
-      fillTable($('a-os'), rows[9], 'operatingSystem', 'totalUsers', fmtNum);
-      fillTable($('a-res'), rows[10], 'screenResolution', 'totalUsers', fmtNum);
+      fillTable($('a-countries'), rows[5], 'country', 'activeUsers', fmtNum);
+      fillTable($('a-cities'), rows[6], 'city', 'activeUsers', fmtNum);
+      fillTable($('a-devices'), rows[7], 'deviceCategory', 'activeUsers', fmtNum);
+      fillTable($('a-browsers'), rows[8], 'browser', 'activeUsers', fmtNum);
+      fillTable($('a-os'), rows[9], 'operatingSystem', 'activeUsers', fmtNum);
+      fillTable($('a-res'), rows[10], 'screenResolution', 'activeUsers', fmtNum);
 
       const eventRows = rows[11];
       const counts = {};
@@ -220,18 +223,33 @@
       b.classList.toggle('active', b.dataset.range === range);
     });
     showSections();
-    if (rtTimer) { clearInterval(rtTimer); rtTimer = null; }
+    stopRt();
     if (range === 'realtime') {
       $('live-section').classList.remove('hidden');
       if (GaApi.isSignedIn()) loadRealtime();
-      rtTimer = setInterval(() => {
-        if (currentRange === 'realtime' && GaApi.isSignedIn()) loadRealtime();
-      }, 30000);
+      startRt();
     } else {
       $('live-section').classList.add('hidden');
       if (GaApi.isSignedIn()) loadHistorical(range);
     }
   }
+
+  function startRt() {
+    if (rtTimer || currentRange !== 'realtime' || !GaApi.isSignedIn()) return;
+    rtTimer = setInterval(() => {
+      if (document.hidden || currentRange !== 'realtime' || !GaApi.isSignedIn()) return;
+      loadRealtime();
+    }, 30000);
+  }
+
+  function stopRt() {
+    if (rtTimer) { clearInterval(rtTimer); rtTimer = null; }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopRt();
+    else startRt();
+  });
 
   async function updateConnection() {
     const configured = GaApi.isConfigured();
@@ -254,18 +272,26 @@
   }
 
   function unlock() {
-    $('login-screen').hidden = true;
+    if (!window.AnalyticsAuth || !window.AnalyticsAuth.isAuthorized()) return;
+    $('auth-screen').hidden = true;
+    $('denied-screen').hidden = true;
     $('dashboard').hidden = false;
     applyRange('realtime');
     updateConnection();
   }
 
   function logout() {
-    window.AnalyticsAuth.lock();
-    if (rtTimer) { clearInterval(rtTimer); rtTimer = null; }
+    stopRt();
+    if (window.GaApi) window.GaApi.signOut();
+    if (window.AnalyticsAuth && window.AnalyticsAuth.reset) window.AnalyticsAuth.reset();
     $('dashboard').hidden = true;
-    $('login-screen').hidden = false;
-    $('password').focus();
+    $('denied-screen').hidden = true;
+    $('auth-screen').hidden = false;
+    const retry = $('auth-google-btn');
+    retry.disabled = false;
+    const span = retry.querySelector('span');
+    if (span) span.textContent = 'Sign in with Google';
+    $('auth-status').textContent = 'Signed out — sign in again to continue.';
   }
 
   function wire() {

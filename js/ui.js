@@ -329,6 +329,7 @@
         if (toggle && toggle.checked !== appState.nightTheme) toggle.checked = appState.nightTheme;
         updateSceneStyles();
         syncUiPrefs();
+        window.RDTrack('theme_changed', { theme: appState.nightTheme ? 'night' : 'day' });
       }
 
       // Device APIs are permission / browser dependent. When granted, location is

@@ -7,6 +7,7 @@
 
       window.RDTrack = function (eventName, params) {
         try {
+          if (window.RDProfile) window.RDProfile.record(eventName, params || {});
           if (!window.gtag || !window.RD_GA_ID || !/^G-[A-Z0-9]+$/.test(window.RD_GA_ID)) return;
           const payload = params || {};
           payload.event_time = Date.now();

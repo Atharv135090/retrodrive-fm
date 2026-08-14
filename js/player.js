@@ -233,7 +233,7 @@
       function nextTrack(fromAutoEnd) {
         if (playlist.length === 0) return;
         const t = playlist[currentTrackIndex];
-        if (!fromAutoEnd && t) window.RDTrack('song_skipped', { song_title: t.title, song_artist: t.artist });
+        if (!fromAutoEnd && t) window.RDTrack('song_skipped', { song_title: t.title, song_artist: t.artist, playlist: t.playlist || 'Hindi Old' });
         if (!playbackQueue.length) buildPlaybackQueue(currentTrackIndex);
         // Never advance to a track that has been marked invalid.
         purgeInvalidFromQueue();
@@ -255,7 +255,7 @@
       function prevTrack() {
         if (playlist.length === 0) return;
         const t = playlist[currentTrackIndex];
-        if (t) window.RDTrack('song_skipped', { song_title: t.title, song_artist: t.artist });
+        if (t) window.RDTrack('song_skipped', { song_title: t.title, song_artist: t.artist, playlist: t.playlist || 'Hindi Old' });
         if (!playbackQueue.length) buildPlaybackQueue(currentTrackIndex);
         queuePos = Math.max(0, queuePos - 1);
         loadTrack(playbackQueue[queuePos]);
@@ -304,8 +304,9 @@
         playing = !!isPlaying;
         if (playing && !wasPlaying) {
           const t = playlist[currentTrackIndex];
-          if (t) window.RDTrack('song_started', { song_title: t.title, song_artist: t.artist });
+          if (t) window.RDTrack('song_started', { song_title: t.title, song_artist: t.artist, playlist: t.playlist || 'Hindi Old' });
         }
+        if (!playing && window.RDProfile) window.RDProfile.onPause();
         document.body.classList.toggle('playing', playing);
         $('btn-pp').innerHTML = playing ? '&#9646;&#9646;' : '&#9654;';
         $('bottom-container').classList.toggle('playing', playing);
@@ -393,7 +394,7 @@
       });
       audio.addEventListener('ended', () => {
         const done = playlist[currentTrackIndex];
-        if (done) window.RDTrack('song_completed', { song_title: done.title, song_artist: done.artist });
+        if (done) window.RDTrack('song_completed', { song_title: done.title, song_artist: done.artist, playlist: done.playlist || 'Hindi Old' });
         if (repMode === 2) { audio.currentTime = 0; doPlay(); }
         else nextTrack(true);
       });

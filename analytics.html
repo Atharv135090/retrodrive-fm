@@ -10,15 +10,34 @@
 </head>
 <body>
   <main class="page">
-    <section id="login-screen">
-      <form id="login-form" class="login-card" autocomplete="off">
+    <section id="auth-screen" class="gate">
+      <div class="gate-card">
         <div class="brand-mark">R</div>
         <h1>RetroDrive FM</h1>
-        <p class="subtitle">Analytics Dashboard &mdash; owner access only</p>
-        <input id="password" class="password-input" type="password" placeholder="Password" aria-label="Password">
-        <button id="unlock-btn" class="unlock-btn" type="submit">Unlock</button>
-        <p id="login-error" class="error" hidden>Incorrect password.</p>
-      </form>
+        <p class="subtitle">Owner Analytics &mdash; Google Account Required</p>
+        <button id="auth-google-btn" class="ga-signin-btn" type="button">
+          <svg class="ga-glogo" viewBox="0 0 48 48" width="18" height="18" aria-hidden="true">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          <span>Sign in with Google</span>
+        </button>
+        <p id="auth-status" class="gate-status">Sign in with your Google account to continue.</p>
+        <button id="auth-return-btn" class="ghost-btn" type="button">&larr; Back to RetroDrive FM</button>
+      </div>
+    </section>
+
+    <section id="denied-screen" class="gate" hidden>
+      <div class="gate-card denied">
+        <div class="brand-mark denied-mark">!</div>
+        <h1>Access Denied</h1>
+        <p class="subtitle">This dashboard is reserved for the RetroDrive FM owner.</p>
+        <p id="denied-detail" class="gate-status"></p>
+        <button id="denied-switch-btn" class="ghost-btn" type="button">Choose a different Google account</button>
+        <button id="denied-return-btn" class="unlock-btn" type="button">Return to RetroDrive FM</button>
+      </div>
     </section>
 
     <section id="dashboard" hidden>
@@ -75,7 +94,7 @@
       <section id="visitors-section" class="section hidden">
         <div class="section-head"><h2>Visitors</h2></div>
         <div class="kpi-grid">
-          <div class="kpi-card"><span class="kpi-label">Total Users</span><span id="v-total" class="kpi-value">—</span></div>
+          <div class="kpi-card"><span class="kpi-label">Active Users</span><span id="v-total" class="kpi-value">—</span></div>
           <div class="kpi-card"><span class="kpi-label">New Users</span><span id="v-new" class="kpi-value">—</span></div>
           <div class="kpi-card"><span class="kpi-label">Returning Users</span><span id="v-returning" class="kpi-value">—</span></div>
           <div class="kpi-card"><span class="kpi-label">Total Sessions</span><span id="v-sessions" class="kpi-value">—</span></div>

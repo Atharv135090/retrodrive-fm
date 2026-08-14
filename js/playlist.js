@@ -96,7 +96,7 @@
         if (playlist.length === 0) return;
         const idx = ((index % playlist.length) + playlist.length) % playlist.length;
         const t = playlist[idx];
-        if (t) window.RDTrack('playlist_selected', { song_title: t.title, song_artist: t.artist });
+        if (t) window.RDTrack('playlist_selected', { song_title: t.title, song_artist: t.artist, playlist: t.playlist || 'Hindi Old' });
         syncQueueToTrack(idx);
         loadTrack(idx);
         wantPlay = true;

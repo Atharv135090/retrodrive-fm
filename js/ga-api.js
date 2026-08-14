@@ -22,6 +22,12 @@
     return !!accessToken;
   }
 
+  // The owner gate (js/analytics-auth.js) obtains the token through its own
+  // single consent popup (openid email + analytics.readonly) and hands it over.
+  function setAccessToken(token) {
+    accessToken = token;
+  }
+
   function loadGsi() {
     return new Promise((resolve, reject) => {
       if (window.google && window.google.accounts) return resolve();
@@ -137,6 +143,7 @@
     isSignedIn,
     signIn,
     signOut,
+    setAccessToken,
     realtimeReport,
     runReport,
     config: { GA4_PROPERTY_ID, OAUTH_CLIENT_ID }
