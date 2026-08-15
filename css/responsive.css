@@ -8184,6 +8184,10 @@ body #vehicle-stage {
         bottom: 0 !important;
         width: 100% !important;
         max-width: none !important;
+        max-height: min(82vh, 680px) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
         border-radius: 24px 24px 0 0 !important;
         padding: 12px 14px calc(18px + env(safe-area-inset-bottom)) !important;
         transform: translateY(105%) !important;
