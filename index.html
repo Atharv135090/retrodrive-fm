@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="css/drive-profile.css">
 </head>
 
-<body>
+<body data-auto-track-open="true">
   <audio id="audio" preload="auto"></audio>
 
   <!-- LOADING OVERLAY -->
@@ -374,6 +374,11 @@
           <span class="pm-label">Download Song</span>
           <span class="pm-state pm-state-download" id="pm-state-download">Save</span>
         </button>
+        <button type="button" class="pm-item" onclick="openInSpotify()">
+          <span class="pm-ico">&#9835;</span>
+          <span class="pm-label">Open in Spotify</span>
+          <span class="pm-state">Open</span>
+        </button>
       </div>
       <div id="pm-sleep" class="pm-view">
         <div class="pm-title">Sleep Timer</div>
@@ -438,6 +443,7 @@
     <script src="js/state.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/storage.js"></script>
+    <script src="js/analytics-supabase.js"></script>
     <script src="js/analytics-tracker.js"></script>
     <script src="js/profile-data.js"></script>
     <script src="js/player.js"></script>

@@ -3,6 +3,10 @@
       // Every music control (next, previous, ended, playlist click) goes
       // through this single load function so the UI and the <audio> element
       // can never drift out of sync.
+      // Tracks the last loaded title so song_change analytics only fire on a
+      // real track change (never on the boot-time first load).
+      let lastLoadedTitle = null;
+
       function loadTrack(index) {
         if (playlist.length === 0) return;
         currentTrackIndex = ((index % playlist.length) + playlist.length) % playlist.length;
@@ -29,6 +33,10 @@
         if (appState.playlistOpen) renderPlaylistPopup();
         if ($('pl-tray').classList.contains('open')) renderPlaylistTray();
         try { localStorage.setItem('retrodrive_song', String(currentTrackIndex)); } catch (e) { }
+        if (lastLoadedTitle !== null && lastLoadedTitle !== t.title) {
+          window.RDTrack('song_change', { song_title: t.title, song_artist: t.artist, playlist: t.playlist || 'Hindi Old' });
+        }
+        lastLoadedTitle = t.title;
       }
 
       function isTrackInvalid(t) {
@@ -250,6 +258,10 @@
           queuePos = 0;
         }
         loadTrack(playbackQueue[queuePos]);
+        if (!fromAutoEnd) {
+          const nt = playlist[currentTrackIndex];
+          if (nt) window.RDTrack('next_track', { song_title: nt.title, song_artist: nt.artist, playlist: nt.playlist || 'Hindi Old' });
+        }
         doPlay();
       }
       function prevTrack() {
@@ -259,12 +271,16 @@
         if (!playbackQueue.length) buildPlaybackQueue(currentTrackIndex);
         queuePos = Math.max(0, queuePos - 1);
         loadTrack(playbackQueue[queuePos]);
+        const pt = playlist[currentTrackIndex];
+        if (pt) window.RDTrack('previous_track', { song_title: pt.title, song_artist: pt.artist, playlist: pt.playlist || 'Hindi Old' });
         doPlay();
       }
 
       function toggleShuf() {
         shuffled = true;
         reshuffleQueueFromCurrent();
+        const t = playlist[currentTrackIndex];
+        if (t) window.RDTrack('shuffle_toggle', { song_title: t.title, song_artist: t.artist });
         const btn = $('btn-shuf2');
         if (btn) {
           btn.classList.add('active-btn');
@@ -276,7 +292,12 @@
       // auto-replays on 'ended' (handled in the audio listener) and the
       // keyboard/UI toggles stay perfectly in sync with the indicator chip.
       function setRepeatSong(force) {
+        const prev = repMode;
         repMode = (force != null ? !!force : repMode !== 2) ? 2 : 0;
+        if (repMode !== prev) {
+          const t = playlist[currentTrackIndex];
+          if (t) window.RDTrack('repeat_toggle', { song_title: t.title, song_artist: t.artist, state: repMode === 2 ? 'on' : 'off' });
+        }
         const fallback = { classList: { add: () => { }, remove: () => { }, toggle: () => { } } };
         const b = $('btn-rep') || fallback;
         const b2 = $('btn-queue') || fallback;
@@ -306,6 +327,10 @@
         if (playing && !wasPlaying) {
           const t = playlist[currentTrackIndex];
           if (t) window.RDTrack('song_started', { song_title: t.title, song_artist: t.artist, playlist: t.playlist || 'Hindi Old' });
+        }
+        if (!playing && wasPlaying) {
+          const t = playlist[currentTrackIndex];
+          if (t) window.RDTrack('song_pause', { song_title: t.title, song_artist: t.artist, playlist: t.playlist || 'Hindi Old' });
         }
         if (!playing && window.RDProfile) window.RDProfile.onPause();
         document.body.classList.toggle('playing', playing);
@@ -483,6 +508,8 @@
           if (wave) wave.classList.remove('active');
           stopEqualizerLoop();
           playEngineSound();
+          const t = playlist[currentTrackIndex];
+          if (t) window.RDTrack('engine_off', { song_title: t.title, song_artist: t.artist });
           return;
         }
 
@@ -496,6 +523,8 @@
         if (wave) wave.classList.add('active');
         startEqualizerLoop();
         stopEngineSound();
+        const t = playlist[currentTrackIndex];
+        if (t) window.RDTrack('engine_on', { song_title: t.title, song_artist: t.artist });
       }
 
       function toggleSportMode() {
@@ -503,6 +532,8 @@
         document.body.classList.toggle('sport-mode', sportMode);
         updatePlayerMenuStates();
         closePlayerMenu();
+        const t = playlist[currentTrackIndex];
+        if (t) window.RDTrack(sportMode ? 'sport_mode_on' : 'sport_mode_off', { song_title: t.title, song_artist: t.artist });
       }
 
       // â”€â”€ LUXURY THREE-DOT MENU â”€â”€
@@ -574,6 +605,8 @@
         updateSleepCountdown();
         updatePlayerMenuStates();
         closePlayerMenu();
+        const t = playlist[currentTrackIndex];
+        if (t) window.RDTrack('sleep_timer_start', { song_title: t.title, song_artist: t.artist, minutes: Math.max(1, Math.round(ms / 60000)) });
       }
 
       function startSleepTimer(minutes) {
@@ -625,6 +658,8 @@
         renderSleepBadge();
         updatePlayerMenuStates();
         closePlayerMenu();
+        const t = playlist[currentTrackIndex];
+        if (t) window.RDTrack('sleep_timer_cancel', { song_title: t.title, song_artist: t.artist });
       }
 
       // â”€â”€ CUSTOM TIMER MODAL â”€â”€
@@ -650,6 +685,7 @@
         const t = playlist[currentTrackIndex];
         if (!t || !t.src) return;
         closePlayerMenu();
+        window.RDTrack('download_song', { song_title: t.title, song_artist: t.artist, playlist: t.playlist || 'Hindi Old' });
         const extMatch = /\.([a-z0-9]{2,5})(?:$|[?#])/i.exec(t.src);
         const ext = extMatch ? '.' + extMatch[1] : '.mp3';
         const name = sanitizeFilename(t.title) + ext;
@@ -696,6 +732,15 @@
 
         if (downloadBtnState) downloadBtnState.textContent = 'Saved!';
         setTimeout(() => { if (downloadBtnState) downloadBtnState.textContent = 'Save'; }, 2500);
+      }
+
+      function openInSpotify() {
+        const t = playlist[currentTrackIndex];
+        closePlayerMenu();
+        if (!t || !t.title) return;
+        window.RDTrack('spotify_open', { song_title: t.title, song_artist: t.artist });
+        const url = 'https://open.spotify.com/search/' + encodeURIComponent(t.title);
+        window.open(url, '_blank', 'noopener,noreferrer');
       }
 
       // â”€â”€ MENU WIRING â”€â”€

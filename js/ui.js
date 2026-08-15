@@ -320,7 +320,15 @@
       }
 
       function toggleThemeMode(enabled) {
+        const prev = appState.nightTheme;
         appState.nightTheme = !!enabled;
+        if (appState.nightTheme !== prev) {
+          const t = (typeof playlist !== 'undefined' && playlist[currentTrackIndex]) ? playlist[currentTrackIndex] : null;
+          window.RDTrack(appState.nightTheme ? 'theme_night' : 'theme_day', {
+            theme: appState.nightTheme ? 'night' : 'day',
+            song_title: t ? t.title : ''
+          });
+        }
         document.body.classList.toggle('theme-night', appState.nightTheme);
         document.body.classList.toggle('theme-day', !appState.nightTheme);
         const label = $('theme-mode-label');
