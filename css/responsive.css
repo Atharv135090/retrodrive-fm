@@ -8184,7 +8184,8 @@ body #vehicle-stage {
         bottom: 0 !important;
         width: 100% !important;
         max-width: none !important;
-        max-height: min(82vh, 680px) !important;
+        max-height: 82vh !important;
+        max-height: min(82dvh, 680px) !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
         overscroll-behavior: contain !important;
@@ -9140,19 +9141,20 @@ body #vehicle-stage {
     @media (max-width: 768px) {
       /* Full page view & background image framing per PRD */
       html, body {
-        overflow: hidden !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        position: fixed !important;
-        width: 100vw !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        height: auto !important;
+        min-height: 100vh !important;
+        min-height: 100dvh !important;
+        overscroll-behavior-y: none !important;
+        width: 100% !important;
         background-color: #050810 !important;
       }
 
       /* Mobile Full-Screen Car Background: Defender as permanent mobile car */
       body #hero-backdrop,
       body.theme-night #hero-backdrop,
-      body.theme-day #hero-backdrop,
-      body {
+      body.theme-day #hero-backdrop {
         position: fixed !important;
         inset: 0 !important;
         width: 100vw !important;
@@ -9540,6 +9542,7 @@ body #vehicle-stage {
       /* â”€â”€ 3. BOTTOM MUSIC PLAYER DOCK â”€â”€ */
       body #bottom-container {
         position: fixed !important;
+        bottom: 10px !important;
         bottom: calc(10px + env(safe-area-inset-bottom)) !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
